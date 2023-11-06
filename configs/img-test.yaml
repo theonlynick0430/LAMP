@@ -2,10 +2,10 @@ pretrained_model_path: ".checkpoints/stable-diffusion-v1-4"
 output_dir: "./outputs/horse_run"
 
 train_data:
-  video_root: "./training_data/horse_run"
+  video_root: "/nfs/turbo/coe-jjparkcv/datasets/bridge/raw/bridge_data_v2/datacol1_toykitchen1/many_skills/00/2023-03-15_13-35-31/raw/traj_group0/traj0"
   n_sample_frames: 16
-  width: 1920
-  height: 1080
+  width: 640
+  height: 480
   sample_start_idx: 0
   sample_frame_rate: 1
 

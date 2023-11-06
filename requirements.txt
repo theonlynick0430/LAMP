@@ -10,3 +10,5 @@ einops
 imageio
 ftfy
 opencv-python
+pandas
+av
