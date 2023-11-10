@@ -47,5 +47,5 @@ fi
 
 echo "min # of imgs in a traj: $min_trajs"
 echo "max # of imgs in a traj: $max_trajs"
-echo "# of trajs containing at least $l files: $subfolders_with_at_least_l"
+echo "# of trajs containing at least $l imgs: $trajs_with_at_least_l"
 echo "mean # of imgs in trajs: $mean_imgs"

@@ -12,3 +12,4 @@ ftfy
 opencv-python
 pandas
 av
+matplotlib

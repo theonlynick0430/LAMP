@@ -1,5 +1,5 @@
 pretrained_model_path: ".checkpoints/stable-diffusion-v1-4"
-output_dir: "./outputs/horse_run"
+output_dir: "./outputs/bridge"
 
 train_data:
   video_root: "/nfs/turbo/coe-jjparkcv/datasets/bridge/raw/bridge_data_v2/datacol1_toykitchen1/many_skills/00/2023-03-15_13-35-31/raw/traj_group0/traj0"
