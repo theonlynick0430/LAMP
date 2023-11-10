@@ -40,17 +40,18 @@ class LAMPImageDataset(Dataset):
 
         self.root = video_root
         self.traj_folder_paths = sorted([os.path.join(self.root, traj_folder) for traj_folder in os.listdir(self.root)], key=alphanum_key)
-        self.num_prompts = len(self.traj_folder_paths)
+
+        # lang labels
+        self.prompt = []
+        for traj_folder_path in self.traj_folder_paths:
+            with open(os.path.join(traj_folder_path, "lang.txt"), 'r') as file:
+                self.prompt.append(file.readline().strip())
+        self.prompt_ids = [] # tokenized prompts (handled in training script)
 
     def __len__(self):
         return len(self.traj_folder_paths)
 
     def __getitem__(self, idx):
-        # lang label 
-        prompt = None
-        with open(os.path.join(self.traj_folder_paths[idx], "lang.txt"), 'r') as file:
-            prompt = file.readline().strip()
-
         # traj directory handling (single view)
         traj_folder_path = self.traj_folder_paths[idx]
         cam0_folder_path = os.path.join(traj_folder_path, "images0")
@@ -73,6 +74,6 @@ class LAMPImageDataset(Dataset):
             img_t = torch.flip(img_t, dims=[3])
         item = {
             "pixel_values": (img_t / 127.5 - 1.0),
-            "prompt": prompt
+            "prompt_ids": self.prompt_ids[idx]
         }
         return item

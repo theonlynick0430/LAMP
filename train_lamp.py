@@ -25,7 +25,7 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
 from lamp.models.unet import UNet3DConditionModel
-from lamp.data.dataset import LAMPDataset
+from lamp.data.img_dataset import LAMPImageDataset
 from lamp.pipelines.pipeline_lamp import LAMPPipeline
 from lamp.util import save_videos_grid, ddim_inversion
 from einops import rearrange
@@ -156,7 +156,7 @@ def main(
     )
 
     # Get the training dataset
-    train_dataset = LAMPDataset(**train_data)
+    train_dataset = LAMPImageDataset(**train_data)
 
     # Preprocessing the dataset
     for p in train_dataset.prompt:

@@ -53,15 +53,19 @@ def main(
         train_dataset, batch_size=train_batch_size
     )
 
+    # subsitution for tokenizer
+    for prompt in train_dataset.prompt:
+        train_dataset.prompt_ids.append(prompt)
+
     weight_dtype = torch.float32
     for i in range(100): # 100 epochs
         print(f"Epoch: {i}")
         for j, batch in enumerate(train_dataloader):
             print(f"Batch {j}")
             pixel_values = batch["pixel_values"].to(weight_dtype)
-            prompt = batch["prompt"]
+            prompt_id = batch["prompt_ids"]
             print(pixel_values.shape)
-            print(prompt)
+            print(prompt_id)
 
 
 if __name__ == "__main__":
