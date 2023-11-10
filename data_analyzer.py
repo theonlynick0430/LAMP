@@ -48,9 +48,6 @@ def main(
 ):
     # Get the training dataset
     train_dataset = LAMPImageDataset(**train_data)
-    # Placeholder for CLIP-generated prompts
-    for i in range(len(train_dataset.prompt)):
-        train_dataset.prompt_ids.append("robot kitchen")
     # DataLoaders creation:
     train_dataloader = torch.utils.data.DataLoader(
         train_dataset, batch_size=train_batch_size
@@ -62,9 +59,9 @@ def main(
         for j, batch in enumerate(train_dataloader):
             print(f"Batch {j}")
             pixel_values = batch["pixel_values"].to(weight_dtype)
-            prompt_ids = batch["prompt_ids"]
+            prompt = batch["prompt"]
             print(pixel_values.shape)
-            print(len(prompt_ids))
+            print(prompt)
 
 
 if __name__ == "__main__":
