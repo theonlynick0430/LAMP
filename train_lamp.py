@@ -25,7 +25,7 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
 from lamp.models.unet import UNet3DConditionModel
-from lamp.data.img_dataset import LAMPImageDataset
+from lamp.data.img_dataset import LAMPImageDataset, alphanum_key
 from lamp.pipelines.pipeline_lamp import LAMPPipeline
 from lamp.util import save_videos_grid, ddim_inversion
 from einops import rearrange
@@ -335,17 +335,22 @@ def main(
                         generator = torch.Generator(device=latents.device)
                         generator.manual_seed(seed)
 
-                        for idx, prompt in enumerate(validation_data.prompts):
-                            image = cv2.imread('images/' + prompt.replace(' ', '_') + '.png')
-                            image = cv2.resize(image, (512, 320))[:, :, ::-1]
-                            first_frame_latents = torch.Tensor(image.copy()).to(latents.device).type_as(latents).permute(2, 0, 1).repeat(1, 1, 1, 1)
+                        traj_folder_paths = sorted([os.path.join(validation_data.root, traj_folder) for traj_folder in os.listdir(validation_data.root)], key=alphanum_key)
+                        for i, traj_folder_path in enumerate(traj_folder_paths):
+                            prompt = None
+                            with open(os.path.join(traj_folder_path, "lang.txt"), 'r') as file:
+                                prompt = file.readline().strip()
+                            img_path = os.path.join(os.path.join(traj_folder_path, "images0"), "im_0.jpg")
+                            img = cv2.imread(img_path)
+                            img = cv2.resize(img, (validation_data.width, validation_data.height))
+                            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                            first_frame_latents = torch.Tensor(img).to(latents.device).type_as(latents).permute(2, 0, 1).repeat(1, 1, 1, 1)
                             first_frame_latents = first_frame_latents / 127.5 - 1.0
                             first_frame_latents = vae.encode(first_frame_latents).latent_dist.sample() * 0.18215
                             first_frame_latents = first_frame_latents.repeat(1, 1, 1, 1, 1).permute(1, 2, 0, 3, 4)
-
                             sample = validation_pipeline(prompt, generator=generator, latents=first_frame_latents,
                                                          **validation_data).videos
-                            save_videos_grid(sample, f"{output_dir}/samples/sample-{global_step}/{prompt}.gif")
+                            save_videos_grid(sample, f"{output_dir}/samples/sample-{global_step}/traj{i}.gif")
                             samples.append(sample)
                         samples = torch.concat(samples)
                         save_path = f"{output_dir}/samples/sample-{global_step}.gif"
@@ -377,5 +382,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, default="./configs/tuneavideo.yaml")
     args = parser.parse_args()
-
     main(**OmegaConf.load(args.config))

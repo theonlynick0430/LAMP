@@ -24,21 +24,19 @@ def alphanum_key(s):
 class LAMPImageDataset(Dataset):
     def __init__(
             self,
-            video_root: str,
+            root: str,
             width: int = 512,
             height: int = 512,
-            n_sample_frames: int = 8,
-            sample_start_idx: int = 0,
-            sample_frame_rate: int = 1,
+            traj_length: int = 8,
+            sample_frame_freq: int = 1,
     ):
         self.width = width
         self.height = height
         self.channels = 3
-        self.traj_length = n_sample_frames
-        self.sample_start_idx = sample_start_idx
-        self.sample_frame_rate = sample_frame_rate
+        self.traj_length = traj_length
+        self.sample_frame_freq = sample_frame_freq
 
-        self.root = video_root
+        self.root = root
         self.traj_folder_paths = sorted([os.path.join(self.root, traj_folder) for traj_folder in os.listdir(self.root)], key=alphanum_key)
 
         # lang labels
@@ -56,13 +54,13 @@ class LAMPImageDataset(Dataset):
         traj_folder_path = self.traj_folder_paths[idx]
         cam0_folder_path = os.path.join(traj_folder_path, "images0")
         img_paths = sorted([os.path.join(cam0_folder_path, file) for file in os.listdir(cam0_folder_path) if file.endswith(('.jpg', '.png', '.jpeg'))], key=alphanum_key)
-        start_idx = random.randint(0, len(img_paths)-self.traj_length*self.sample_frame_rate-1)
-        sample_idx = list(range(start_idx, len(img_paths), self.sample_frame_rate))[:self.traj_length]
+        start_idx = random.randint(0, len(img_paths)-self.traj_length*self.sample_frame_freq-1)
+        sample_idx = list(range(start_idx, len(img_paths), self.sample_frame_freq))[:self.traj_length]
 
         # traj imgs (single view)
         img_t = torch.zeros((len(sample_idx), self.height, self.width, self.channels), dtype=torch.uint8)
         for i, val in enumerate(sample_idx):
-            img_path = copy.copy(img_paths[val])
+            img_path = img_paths[val]
             img = cv2.imread(img_path)
             img = cv2.resize(img, (self.width, self.height))
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

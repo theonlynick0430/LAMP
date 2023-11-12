@@ -4,3 +4,5 @@ results
 motion_weights
 training_videos
 bridge
+train.log
+__pycache__/

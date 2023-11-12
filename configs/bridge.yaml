@@ -1,21 +1,18 @@
-pretrained_model_path: ".checkpoints/stable-diffusion-v1-4"
-output_dir: "./outputs/bridge"
+pretrained_model_path: "/nfs/turbo/coe-jjparkcv/niksrid/LAMP/checkpoints"
+output_dir: "/nfs/turbo/coe-jjparkcv/niksrid/LAMP/outputs/bridge"
 
 train_data:
-  video_root: "/home/niksrid/mental-models/LAMP/bridge"
-  n_sample_frames: 16
+  root: "/home/niksrid/mental-models/LAMP/bridge/train"
+  traj_length: 16
   width: 320
   height: 240
-  sample_start_idx: 0
-  sample_frame_rate: 1
+  sample_frame_freq: 1
 
 validation_data:
-  prompts:
-    - "a horse runs in the universe"
-    - "a horse runs on the Mars"
+  root: "/home/niksrid/mental-models/LAMP/bridge/test"
   video_length: 16
-  width: 512
-  height: 320
+  width: 320
+  height: 240
   num_inference_steps: 50
   guidance_scale: 12.5
   use_inv_latent: False
@@ -25,7 +22,7 @@ learning_rate: 3e-5
 train_batch_size: 1
 max_train_steps: 30000
 checkpointing_steps: 5000
-validation_steps: 50
+validation_steps: 5000
 trainable_modules:
   - "conv1d"
   - "attn1.to_q"
