@@ -1,15 +1,15 @@
-pretrained_model_path: "/nfs/turbo/coe-jjparkcv/niksrid/LAMP/checkpoints"
-output_dir: "/nfs/turbo/coe-jjparkcv/niksrid/LAMP/outputs/bridge"
+pretrained_model_path: "/home/xuweic/Documents/LAMP/checkpoint/stable-diffusion-v1-4"
+output_dir: "/home/xuweic/Documents/LAMP/output_bridge"
 
 train_data:
-  root: "/home/niksrid/mental-models/LAMP/bridge/train"
+  root: "/home/xuweic/Documents/LAMP/lamp/data/datacol1_toykitchen1.json"
   traj_length: 16
   width: 320
   height: 240
   sample_frame_freq: 1
 
 validation_data:
-  root: "/home/niksrid/mental-models/LAMP/bridge/test"
+  root: "/home/xuweic/Documents/LAMP/lamp/data/validation.json"
   video_length: 16
   width: 320
   height: 240

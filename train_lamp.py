@@ -7,7 +7,7 @@ import os
 import cv2
 from typing import Dict, Optional, Tuple
 from omegaconf import OmegaConf
-
+import wandb
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
@@ -25,7 +25,7 @@ from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
 
 from lamp.models.unet import UNet3DConditionModel
-from lamp.data.img_dataset import LAMPImageDataset, alphanum_key
+from lamp.data.img_dataset import LAMPImageDataset, alphanum_key, ValidationDataset
 from lamp.pipelines.pipeline_lamp import LAMPPipeline
 from lamp.util import save_videos_grid, ddim_inversion
 from einops import rearrange
@@ -157,6 +157,7 @@ def main(
 
     # Get the training dataset
     train_dataset = LAMPImageDataset(**train_data)
+    validation_dataset = ValidationDataset(validation_data)
 
     # Preprocessing the dataset
     for p in train_dataset.prompt:
@@ -253,6 +254,7 @@ def main(
     # Only show the progress bar once on each machine.
     progress_bar = tqdm(range(global_step, max_train_steps), disable=not accelerator.is_local_main_process)
     progress_bar.set_description("Steps")
+    wandb.init(project="LAMP_eval", entity="xuweic")
 
     for epoch in range(first_epoch, num_train_epochs):
         unet.train()
@@ -315,6 +317,12 @@ def main(
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad()
+                
+                wandb.log({
+                    "train_loss": train_loss,
+                    "step_loss": loss.item(),
+                    "learning_rate": lr_scheduler.get_last_lr()[0]
+                }, step=global_step)
 
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
@@ -335,23 +343,20 @@ def main(
                         generator = torch.Generator(device=latents.device)
                         generator.manual_seed(seed)
 
-                        traj_folder_paths = sorted([os.path.join(validation_data.root, traj_folder) for traj_folder in os.listdir(validation_data.root)], key=alphanum_key)
-                        for i, traj_folder_path in enumerate(traj_folder_paths):
-                            prompt = None
-                            with open(os.path.join(traj_folder_path, "lang.txt"), 'r') as file:
-                                prompt = file.readline().strip()
-                            img_path = os.path.join(os.path.join(traj_folder_path, "images0"), "im_0.jpg")
-                            img = cv2.imread(img_path)
-                            img = cv2.resize(img, (validation_data.width, validation_data.height))
-                            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                            first_frame_latents = torch.Tensor(img).to(latents.device).type_as(latents).permute(2, 0, 1).repeat(1, 1, 1, 1)
-                            first_frame_latents = first_frame_latents / 127.5 - 1.0
+                        # Assuming validation_dataset is an instance of ValidationDataset
+                        for i, data in enumerate(validation_dataset):
+                            prompt = data['prompt']
+                            img = data['image']  # The image is already preprocessed in the dataset
+
+                            # The image tensor from the dataset needs to be adjusted for device and data type
+                            first_frame_latents = img.to(latents.device).type_as(latents).unsqueeze(0).repeat(1, 1, 1, 1)
                             first_frame_latents = vae.encode(first_frame_latents).latent_dist.sample() * 0.18215
                             first_frame_latents = first_frame_latents.repeat(1, 1, 1, 1, 1).permute(1, 2, 0, 3, 4)
-                            sample = validation_pipeline(prompt, generator=generator, latents=first_frame_latents,
-                                                         **validation_data).videos
+                            
+                            sample = validation_pipeline(prompt, generator=generator, latents=first_frame_latents, **validation_data).videos
                             save_videos_grid(sample, f"{output_dir}/samples/sample-{global_step}/traj{i}.gif")
                             samples.append(sample)
+
                         samples = torch.concat(samples)
                         save_path = f"{output_dir}/samples/sample-{global_step}.gif"
                         save_videos_grid(samples, save_path)

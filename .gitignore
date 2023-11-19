@@ -4,5 +4,11 @@ results
 motion_weights
 training_videos
 bridge
+wandb
+output_bridge
+.vscode
 train.log
+datacol1_toykitchen1.json
+validation.json
+checkpoint
 __pycache__/
